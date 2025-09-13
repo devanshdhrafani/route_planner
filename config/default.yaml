@@ -16,8 +16,11 @@ defaults:
 
 # Future planner parameters can go here
 planner:
-  # algorithm: "astar"  # for future use
-  # heuristic: "haversine"  # for future use
-  # weights:  # for future use
-  #   distance: 1.0
-  #   time: 0.5
+  type: "astar"
+  # Cost functions to use - can specify one or both
+  cost_functions:
+    - "distance"  # Plan by distance (km)
+    - "time"      # Plan by time (seconds)
+  
+  # Default speed settings for time-based planning
+  default_speed_mph: 25  # Default speed when no max_speed is specified

@@ -8,16 +8,33 @@
 namespace route_planner {
 
 /**
+ * Cost function type for A* planning
+ */
+enum class CostFunction {
+    DISTANCE,  // Cost based on distance (km)
+    TIME       // Cost based on travel time (seconds)
+};
+
+/**
  * A* path planning algorithm implementation.
  */
 class AStarPlanner : public Planner {
 public:
+    /**
+     * Set the cost function and parameters for planning
+     */
+    void set_cost_function(CostFunction cost_func, double default_speed_mph = 25.0);
+    
     PlannerResult plan(
         const Graph& graph,
         const Coordinates& start_coord,
         const Coordinates& end_coord) override;
     
-    std::string get_name() const override { return "A*"; }
+    std::string get_name() const override;
+
+private:
+    CostFunction cost_function_{CostFunction::DISTANCE};
+    double default_speed_mph_{25.0};  // Default speed when no max_speed available
 
 private:
     // Internal node state for A* search
@@ -40,6 +57,11 @@ private:
             return f_value > other.f_value;
         }
     };
+    
+    /**
+     * Calculate edge cost based on the selected cost function
+     */
+    double calculate_edge_cost(const Edge* edge) const;
     
     /**
      * Calculate heuristic estimate (h-value) between nodes.

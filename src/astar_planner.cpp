@@ -7,6 +7,48 @@
 
 namespace route_planner {
 
+void AStarPlanner::set_cost_function(CostFunction cost_func, double default_speed_mph) {
+    cost_function_ = cost_func;
+    default_speed_mph_ = default_speed_mph;
+}
+
+std::string AStarPlanner::get_name() const {
+    switch (cost_function_) {
+        case CostFunction::DISTANCE:
+            return "A* (Distance)";
+        case CostFunction::TIME:
+            return "A* (Time)";
+        default:
+            return "A*";
+    }
+}
+
+double AStarPlanner::calculate_edge_cost(const Edge* edge) const {
+    switch (cost_function_) {
+        case CostFunction::DISTANCE:
+            return edge->distance / 1000.0;  // Convert meters to km
+            
+        case CostFunction::TIME: {
+            // Convert distance from meters to miles
+            double distance_miles = edge->distance / 1609.34;
+            
+            // Get speed in mph
+            double speed_mph = default_speed_mph_;
+            if (edge->max_speed.has_value()) {
+                // Assume max_speed is in km/h, convert to mph
+                speed_mph = edge->max_speed.value() * 0.621371;
+            }
+            
+            // Calculate time in seconds
+            double time_hours = distance_miles / speed_mph;
+            return time_hours * 3600.0;  // Convert to seconds
+        }
+        
+        default:
+            return edge->distance / 1000.0;
+    }
+}
+
 PlannerResult AStarPlanner::plan(const Graph& graph,
                                const Coordinates& start_coord,
                                const Coordinates& goal_coord) {
@@ -40,7 +82,9 @@ PlannerResult AStarPlanner::plan(const Graph& graph,
         
         // Goal check
         if (current_id == goal_id) {
-            return reconstruct_path(graph, node_states, start_id, goal_id);
+            auto final_result = reconstruct_path(graph, node_states, start_id, goal_id);
+            final_result.num_nodes_explored = nodes_explored;
+            return final_result;
         }
         
         // Skip if we've found a better path to this node
@@ -60,7 +104,7 @@ PlannerResult AStarPlanner::plan(const Graph& graph,
                 continue;  // Skip if we can't traverse this edge
             }
             
-            double tentative_g = node_states[current_id].g_score + edge_ptr->distance;
+            double tentative_g = node_states[current_id].g_score + calculate_edge_cost(edge_ptr);
             
             // If we haven't visited this node or found a better path
             if (node_states.find(neighbor_id) == node_states.end() ||
@@ -85,10 +129,26 @@ double AStarPlanner::heuristic(const Graph& graph, int64_t current_id, int64_t g
     const Node* current = graph.get_node(current_id);
     const Node* goal = graph.get_node(goal_id);
     
-    return utils::haversine_distance(
+    double distance_km = utils::haversine_distance(
         current->latitude, current->longitude,
         goal->latitude, goal->longitude
     );
+    
+    switch (cost_function_) {
+        case CostFunction::DISTANCE:
+            return distance_km;
+            
+        case CostFunction::TIME: {
+            // For time heuristic, assume we can travel at highway speed
+            double highway_speed_mph = std::max(default_speed_mph_, 55.0);  // At least 55 mph for heuristic
+            double distance_miles = distance_km * 0.621371;
+            double time_hours = distance_miles / highway_speed_mph;
+            return time_hours * 3600.0;  // Convert to seconds
+        }
+        
+        default:
+            return distance_km;
+    }
 }
 
 PlannerResult AStarPlanner::reconstruct_path(const Graph& graph,
@@ -120,8 +180,9 @@ PlannerResult AStarPlanner::reconstruct_path(const Graph& graph,
     // Reverse to get start-to-goal order
     std::reverse(path.begin(), path.end());
     
-    // Calculate total distance using actual edge distances
+    // Calculate total distance and time using actual edge data
     double total_distance = 0.0;
+    double total_time = 0.0;
     for (size_t i = 1; i < path.size(); ++i) {
         int64_t from_id = path[i-1];
         int64_t to_id = path[i];
@@ -131,7 +192,18 @@ PlannerResult AStarPlanner::reconstruct_path(const Graph& graph,
         for (const auto* edge : graph.get_outgoing_edges(from_id)) {
             if ((edge->source == from_id && edge->target == to_id) ||
                 (!edge->oneway && edge->target == from_id && edge->source == to_id)) {
+                
                 total_distance += edge->distance;
+                
+                // Calculate time for this edge
+                double distance_miles = edge->distance / 1609.34;
+                double speed_mph = default_speed_mph_;
+                if (edge->max_speed.has_value()) {
+                    speed_mph = edge->max_speed.value() * 0.621371;  // km/h to mph
+                }
+                double time_hours = distance_miles / speed_mph;
+                total_time += time_hours * 3600.0;  // Convert to seconds
+                
                 found_edge = true;
                 break;
             }
@@ -149,7 +221,9 @@ PlannerResult AStarPlanner::reconstruct_path(const Graph& graph,
     result.success = true;
     result.path = std::move(path);
     result.total_distance = total_distance;
-    result.num_nodes_explored = path.size();
+    result.total_time = total_time;
+    result.num_nodes_explored = 0;  // Will be set by the calling function
+    result.cost_function = (cost_function_ == CostFunction::DISTANCE) ? "distance" : "time";
     return result;
 }
 

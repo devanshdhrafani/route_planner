@@ -14,7 +14,9 @@ struct PlannerResult {
     bool success{false};                   // Whether a path was found
     std::vector<int64_t> path;            // Sequence of node IDs in the path
     double total_distance{0.0};           // Total path length in meters
+    double total_time{0.0};               // Total travel time in seconds
     int num_nodes_explored{0};            // Number of nodes explored during search
+    std::string cost_function;            // The cost function used ("distance" or "time")
 };
 
 /**

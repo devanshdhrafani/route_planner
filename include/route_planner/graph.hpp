@@ -39,6 +39,15 @@ public:
     std::vector<const Edge*> get_outgoing_edges(int64_t node_id) const;
     
     /**
+     * Find the edge between two specific nodes.
+     * 
+     * @param from_node_id Source node ID
+     * @param to_node_id Target node ID
+     * @return Pointer to the edge if found, nullptr otherwise
+     */
+    const Edge* get_edge_between_nodes(int64_t from_node_id, int64_t to_node_id) const;
+    
+    /**
      * Calculate the straight-line distance between two nodes.
      * This will be used as the heuristic function for A*.
      * 

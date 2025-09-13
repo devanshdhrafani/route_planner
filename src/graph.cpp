@@ -38,6 +38,31 @@ std::vector<const Edge*> Graph::get_outgoing_edges(int64_t node_id) const {
     return result;
 }
 
+const Edge* Graph::get_edge_between_nodes(int64_t from_node_id, int64_t to_node_id) const {
+    auto it = adjacency_list_.find(from_node_id);
+    if (it != adjacency_list_.end()) {
+        for (size_t edge_idx : it->second) {
+            const Edge& edge = edges_[edge_idx];
+            if (edge.target == to_node_id) {
+                return &edge;
+            }
+        }
+    }
+    
+    // If not found in forward direction, check reverse direction for non-oneway roads
+    auto reverse_it = adjacency_list_.find(to_node_id);
+    if (reverse_it != adjacency_list_.end()) {
+        for (size_t edge_idx : reverse_it->second) {
+            const Edge& edge = edges_[edge_idx];
+            if (edge.target == from_node_id && !edge.oneway) {
+                return &edge;
+            }
+        }
+    }
+    
+    return nullptr;
+}
+
 double Graph::straight_line_distance(int64_t from, int64_t to) const {
     const Node* from_node = get_node(from);
     const Node* to_node = get_node(to);

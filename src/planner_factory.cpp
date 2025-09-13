@@ -19,7 +19,18 @@ PlannerPtr PlannerFactory::create(const std::string& planner_type) {
 PlannerPtr PlannerFactory::create(const Config& config) {
     // Get planner type from config
     std::string planner_type = config.get<std::string>("planner.type", "astar");
-    return create(planner_type);
+    auto planner = create(planner_type);
+    
+    // Configure A* specific settings
+    if (planner_type == "astar") {
+        auto astar = dynamic_cast<AStarPlanner*>(planner.get());
+        if (astar) {
+            double default_speed = config.get<double>("planner.default_speed_mph", 25.0);
+            astar->set_cost_function(CostFunction::DISTANCE, default_speed);  // Default to distance
+        }
+    }
+    
+    return planner;
 }
 
 } // namespace route_planner
