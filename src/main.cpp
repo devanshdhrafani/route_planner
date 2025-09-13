@@ -120,7 +120,7 @@ void save_route_to_csv(const route_planner::Graph& graph,
     }
 }
 
-void plan_and_display_route(const std::string& cost_func,
+void plan_and_save_route(const std::string& cost_func,
                             const route_planner::Config& config,
                             const route_planner::Graph& graph,
                             const route_planner::Coordinates& start,
@@ -265,7 +265,7 @@ int main(int argc, char* argv[]) {
     
     // Plan for each cost function
     for (const auto& cost_func : cost_functions) {
-        plan_and_display_route(cost_func, config, graph, args.start, args.end, 
+        plan_and_save_route(cost_func, config, graph, args.start, args.end, 
                               project_root, default_speed, loader);
     }
     
