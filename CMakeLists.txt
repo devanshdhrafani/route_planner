@@ -15,11 +15,13 @@ endif()
 
 # Find required packages
 find_package(nlohmann_json 3.9.1 REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # Library target
 add_library(route_planner_lib
     src/graph.cpp
     src/data_loader.cpp
+    src/config.cpp
 )
 
 target_include_directories(route_planner_lib
@@ -30,6 +32,7 @@ target_include_directories(route_planner_lib
 target_link_libraries(route_planner_lib
     PUBLIC
         nlohmann_json::nlohmann_json
+        yaml-cpp
 )
 
 # Main executable

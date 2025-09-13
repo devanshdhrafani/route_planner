@@ -1,15 +1,27 @@
 #include "route_planner/data_loader.hpp"
 #include "route_planner/graph.hpp"
+#include "route_planner/config.hpp"
 #include <iostream>
+#include <filesystem>
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <nodes_file> <edges_file>" << std::endl;
+    // Default config file path
+    std::string config_file = "config/default.yaml";
+    
+    // Allow overriding config file via command line
+    if (argc > 1) {
+        config_file = argv[1];
+    }
+    
+    // Load configuration
+    route_planner::Config config;
+    if (!config.load(config_file)) {
+        std::cerr << "Failed to load configuration from " << config_file << std::endl;
         return 1;
     }
     
     route_planner::DataLoader loader;
-    if (!loader.load(argv[1], argv[2])) {
+    if (!loader.load(config.get_nodes_file(), config.get_edges_file())) {
         std::cerr << "Failed to load data" << std::endl;
         return 1;
     }

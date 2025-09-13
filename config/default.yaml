@@ -1,0 +1,14 @@
+# Route Planner Configuration
+
+# Data paths
+data:
+  nodes_file: "../data/nodes_bbox_-80.031_40.410_-79.896_40.494.json"
+  edges_file: "../data/edges_bbox_-80.031_40.410_-79.896_40.494.json"
+
+# Future planner parameters can go here
+planner:
+  # algorithm: "astar"  # for future use
+  # heuristic: "haversine"  # for future use
+  # weights:  # for future use
+  #   distance: 1.0
+  #   time: 0.5
