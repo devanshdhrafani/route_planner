@@ -75,7 +75,7 @@ def main():
             all_lons.extend(df['longitude'].tolist())
             
             print(f"Loaded route: {metadata.get('cost_function', 'unknown')} optimization")
-            print(f"  Distance: {metadata.get('total_distance_km', 0):.2f} km")
+            print(f"  Distance: {metadata.get('total_distance_km', 0) * 0.621371:.2f} miles")
             print(f"  Time: {metadata.get('total_time_minutes', 0):.1f} minutes")
             print(f"  Nodes: {metadata.get('path_nodes', len(df))}")
             
@@ -120,7 +120,7 @@ def main():
                 <div style="font-family: Arial; font-size: 12px;">
                     <b>{route_label}</b><br>
                     Cost Function: {cost_function}<br>
-                    Total Distance: {metadata.get('total_distance_km', 0):.2f} km<br>
+                    Total Distance: {metadata.get('total_distance_km', 0) * 0.621371:.2f} miles<br>
                     Total Time: {metadata.get('total_time_minutes', 0):.1f} minutes<br>
                     Path Nodes: {metadata.get('path_nodes', len(df))}
                 </div>
@@ -187,7 +187,7 @@ def main():
                 <b style="color: #333;">{route_label}</b>
             </div>
             <div style="margin-left: 40px; color: #666; font-size: 11px;">
-                📏 Distance: <strong>{metadata.get('total_distance_km', 0):.2f} km</strong><br>
+                📏 Distance: <strong>{metadata.get('total_distance_km', 0) * 0.621371:.2f} miles</strong><br>
                 ⏱️ Time: <strong>{metadata.get('total_time_minutes', 0):.1f} min</strong>
             </div>
         </div>
