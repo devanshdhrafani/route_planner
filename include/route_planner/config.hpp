@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <yaml-cpp/yaml.h>
 #include "types.hpp"
 
@@ -76,6 +77,21 @@ public:
             return default_value;
         }
     }
+
+    /**
+     * Get highway speed mapping from config.
+     * Returns a map of highway type to speed in mph.
+     */
+    std::unordered_map<std::string, double> get_highway_speeds() const;
+
+    /**
+     * Get speed for a specific highway type.
+     * 
+     * @param highway_type The highway type (e.g., "primary", "residential")
+     * @param fallback_speed Speed to return if highway type not found
+     * @return Speed in mph
+     */
+    double get_highway_speed(const std::string& highway_type, double fallback_speed = 25.0) const;
 
 private:
     YAML::Node config_;

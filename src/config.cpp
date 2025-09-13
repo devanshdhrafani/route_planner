@@ -63,4 +63,39 @@ bool Config::load(const std::string& config_file) {
     }
 }
 
+std::unordered_map<std::string, double> Config::get_highway_speeds() const {
+    std::unordered_map<std::string, double> highway_speeds;
+    
+    try {
+        if (config_["data"] && config_["data"]["highway_speeds"]) {
+            const auto& speeds_node = config_["data"]["highway_speeds"];
+            
+            for (const auto& pair : speeds_node) {
+                std::string highway_type = pair.first.as<std::string>();
+                double speed = pair.second.as<double>();
+                highway_speeds[highway_type] = speed;
+            }
+        }
+    }
+    catch (const YAML::Exception& e) {
+        std::cerr << "Warning: Error loading highway speeds from config: " << e.what() << std::endl;
+    }
+    
+    return highway_speeds;
+}
+
+double Config::get_highway_speed(const std::string& highway_type, double fallback_speed) const {
+    try {
+        if (config_["data"] && config_["data"]["highway_speeds"] && 
+            config_["data"]["highway_speeds"][highway_type]) {
+            return config_["data"]["highway_speeds"][highway_type].as<double>();
+        }
+    }
+    catch (const YAML::Exception&) {
+        // Fall through to return fallback speed
+    }
+    
+    return fallback_speed;
+}
+
 } // namespace route_planner

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "route_planner/planner.hpp"
+#include "route_planner/config.hpp"
 #include <queue>
 #include <unordered_map>
 #include <limits>
@@ -25,6 +26,11 @@ public:
      */
     void set_cost_function(CostFunction cost_func, double default_speed_mph = 25.0);
     
+    /**
+     * Set the config for highway speed mapping
+     */
+    void set_config(const Config* config);
+    
     PlannerResult plan(
         const Graph& graph,
         const Coordinates& start_coord,
@@ -35,6 +41,7 @@ public:
 private:
     CostFunction cost_function_{CostFunction::DISTANCE};
     double default_speed_mph_{25.0};  // Default speed when no max_speed available
+    const Config* config_{nullptr};  // Config for highway speed mapping
 
 private:
     // Internal node state for A* search
@@ -61,7 +68,7 @@ private:
     /**
      * Calculate edge cost based on the selected cost function
      */
-    double calculate_edge_cost(const Edge* edge) const;
+    double calculate_edge_cost(const Edge& edge) const;
     
     /**
      * Calculate heuristic estimate (h-value) between nodes.

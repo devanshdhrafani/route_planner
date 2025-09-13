@@ -12,6 +12,10 @@ void AStarPlanner::set_cost_function(CostFunction cost_func, double default_spee
     default_speed_mph_ = default_speed_mph;
 }
 
+void AStarPlanner::set_config(const Config* config) {
+    config_ = config;
+}
+
 std::string AStarPlanner::get_name() const {
     switch (cost_function_) {
         case CostFunction::DISTANCE:
@@ -23,20 +27,33 @@ std::string AStarPlanner::get_name() const {
     }
 }
 
-double AStarPlanner::calculate_edge_cost(const Edge* edge) const {
+double AStarPlanner::calculate_edge_cost(const Edge& edge) const {
     switch (cost_function_) {
         case CostFunction::DISTANCE:
-            return edge->distance / 1000.0;  // Convert meters to km
+            return edge.distance / 1000.0;  // Convert meters to km
             
         case CostFunction::TIME: {
-            // Convert distance from meters to miles
-            double distance_miles = edge->distance / 1609.34;
+            // Convert distance from meters to miles for consistent calculation
+            double distance_miles = edge.distance / 1609.34;
             
-            // Get speed in mph
+            // Determine speed in mph
             double speed_mph = default_speed_mph_;
-            if (edge->max_speed.has_value()) {
-                // Assume max_speed is in km/h, convert to mph
-                speed_mph = edge->max_speed.value() * 0.621371;
+            
+            // First, try to use explicit speed limit
+            if (edge.max_speed.has_value()) {
+                double max_speed = edge.max_speed.value();
+                // Parse speed string if needed and detect units
+                if (max_speed > 80) {
+                    // Assume km/h, convert to mph
+                    speed_mph = max_speed * 0.621371;
+                } else {
+                    // Assume already in mph
+                    speed_mph = max_speed;
+                }
+            }
+            // If no explicit speed limit, try highway type-based speed from config
+            else if (config_ && edge.highway_type.has_value()) {
+                speed_mph = config_->get_highway_speed(edge.highway_type.value(), default_speed_mph_);
             }
             
             // Calculate time in seconds
@@ -45,7 +62,7 @@ double AStarPlanner::calculate_edge_cost(const Edge* edge) const {
         }
         
         default:
-            return edge->distance / 1000.0;
+            return edge.distance / 1000.0;
     }
 }
 
@@ -104,7 +121,7 @@ PlannerResult AStarPlanner::plan(const Graph& graph,
                 continue;  // Skip if we can't traverse this edge
             }
             
-            double tentative_g = node_states[current_id].g_score + calculate_edge_cost(edge_ptr);
+            double tentative_g = node_states[current_id].g_score + calculate_edge_cost(*edge_ptr);
             
             // If we haven't visited this node or found a better path
             if (node_states.find(neighbor_id) == node_states.end() ||

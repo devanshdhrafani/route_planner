@@ -1,18 +1,47 @@
 # Route Planner Configuration
 
-# Data paths
+# Data sources and interpretation settings
 data:
   nodes_file: "../data/nodes_bbox_-80.031_40.410_-79.896_40.494.json"
   edges_file: "../data/edges_bbox_-80.031_40.410_-79.896_40.494.json"
+  
+  # Highway type speed defaults (mph) - used when OSM max_speed is missing
+  # Based on actual data analysis of road network speed distributions
+  highway_speeds:
+    motorway: 65        # High-speed highways
+    motorway_link: 45   # Highway on/off ramps
+    trunk: 50          # Major arterial roads
+    trunk_link: 35     # Trunk road connections
+    primary: 35        # Primary roads
+    primary_link: 25   # Primary road connections
+    secondary: 20      # Secondary roads
+    secondary_link: 15 # Secondary road connections
+    tertiary: 15       # Tertiary roads
+    tertiary_link: 10  # Tertiary road connections
+    residential: 15    # Residential streets
+    unclassified: 10   # Unclassified roads
+    service: 10        # Service roads, parking lots
+    living_street: 10  # Shared spaces, very low speed
+    track: 10          # Unpaved tracks
+    path: 0            # Walking/cycling paths
+    footway: 0         # Pedestrian paths
+    cycleway: 0        # Bicycle paths
+    busway: 0          # Bus-only roads
+    construction: 0    # Construction zones
+    escape: 0          # Emergency escape routes
+    bus_stop: 0        # Bus stop areas
 
 # Default coordinates
 defaults:
-  start: 
-    lat: 40.464834
-    lon: -79.934860
-  end:
+  # start: 
+  #   lat: 40.464834
+  #   lon: -79.934860
+  start:
     lat: 40.455911
     lon: -79.979289
+  end:
+    lat: 40.435679
+    lon: -79.922490
 
 # Future planner parameters can go here
 planner:
@@ -23,4 +52,4 @@ planner:
     - "time"      # Plan by time (seconds)
   
   # Default speed settings for time-based planning
-  default_speed_mph: 25  # Default speed when no max_speed is specified
+  default_speed_mph: 25  # Fallback speed when no max_speed or highway type is specified

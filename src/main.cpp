@@ -142,6 +142,8 @@ void plan_and_save_route(const std::string& cost_func,
         } else {
             astar->set_cost_function(route_planner::CostFunction::DISTANCE, default_speed);
         }
+        // Set config for highway speed mapping
+        astar->set_config(&config);
     }
     
     std::cout << "Using planner: " << planner->get_name() << std::endl;
