@@ -146,7 +146,8 @@ int main(int argc, char* argv[]) {
             node2->latitude, node2->longitude
         );
     }
-    std::cout << "Total distance: " << total_distance << " km" << std::endl;
+    std::cout << "Total distance: " << total_distance << " km (" << total_distance * 0.621371 << " miles)" << std::endl;
+
 
     // Generate visualization
     if (result.path.size() >= 2) {
