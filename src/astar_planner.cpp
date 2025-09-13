@@ -212,12 +212,27 @@ PlannerResult AStarPlanner::reconstruct_path(const Graph& graph,
                 
                 total_distance += edge->distance;
                 
-                // Calculate time for this edge
+                // Calculate time for this edge using same logic as calculate_edge_cost
                 double distance_miles = edge->distance / 1609.34;
                 double speed_mph = default_speed_mph_;
+                
+                // First, try to use explicit speed limit
                 if (edge->max_speed.has_value()) {
-                    speed_mph = edge->max_speed.value() * 0.621371;  // km/h to mph
+                    double max_speed = edge->max_speed.value();
+                    // Parse speed string if needed and detect units
+                    if (max_speed > 80) {
+                        // Assume km/h, convert to mph
+                        speed_mph = max_speed * 0.621371;
+                    } else {
+                        // Assume already in mph
+                        speed_mph = max_speed;
+                    }
                 }
+                // If no explicit speed limit, try highway type-based speed from config
+                else if (config_ && edge->highway_type.has_value()) {
+                    speed_mph = config_->get_highway_speed(edge->highway_type.value(), default_speed_mph_);
+                }
+                
                 double time_hours = distance_miles / speed_mph;
                 total_time += time_hours * 3600.0;  // Convert to seconds
                 
