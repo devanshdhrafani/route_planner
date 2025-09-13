@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <iomanip>
 #include <chrono>
+#include <fstream>
+#include <sstream>
 
 void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [options]\n"
@@ -149,23 +151,52 @@ int main(int argc, char* argv[]) {
     std::cout << "Total distance: " << total_distance << " km (" << total_distance * 0.621371 << " miles)" << std::endl;
 
 
-    // Generate visualization
+    // Save path to CSV file
     if (result.path.size() >= 2) {
-        std::string path_coords;
-        for (const auto& node_id : result.path) {
-            const auto* node = graph.get_node(node_id);
-            if (!path_coords.empty()) {
-                path_coords += ",";
+        // Create a unique filename based on start and end coordinates
+        std::stringstream filename;
+        filename << "route_" << std::fixed << std::setprecision(6)
+                << start.latitude << "_" << start.longitude << "_to_"
+                << end.latitude << "_" << end.longitude;
+        
+        std::filesystem::path csv_path = project_root / "results" / (filename.str() + ".csv");
+        std::ofstream csv_file(csv_path);
+        
+        if (csv_file.is_open()) {
+            // Write CSV header
+            csv_file << "node_id,latitude,longitude,distance_from_prev_km,cumulative_distance_km" << std::endl;
+            
+            double cumulative_distance = 0.0;
+            for (size_t i = 0; i < result.path.size(); ++i) {
+                const auto* node = graph.get_node(result.path[i]);
+                double distance_from_prev = 0.0;
+                
+                if (i > 0) {
+                    const auto* prev_node = graph.get_node(result.path[i-1]);
+                    distance_from_prev = route_planner::utils::haversine_distance(
+                        prev_node->latitude, prev_node->longitude,
+                        node->latitude, node->longitude
+                    );
+                    cumulative_distance += distance_from_prev;
+                }
+                
+                csv_file << std::fixed << std::setprecision(6)
+                        << node->id << ","
+                        << node->latitude << ","
+                        << node->longitude << ","
+                        << distance_from_prev << ","
+                        << cumulative_distance << std::endl;
             }
-            path_coords += std::to_string(node->latitude) + "," + std::to_string(node->longitude);
+            csv_file.close();
+            std::cout << "Path saved to: " << csv_path << std::endl;
+        } else {
+            std::cerr << "Warning: Failed to save path to CSV file" << std::endl;
         }
 
-        // Create visualization script command with absolute path
+        // Generate visualization using the CSV file
         std::string viz_script = (project_root / ".venv/bin/python").string();
         viz_script += " " + (project_root / "scripts/visualizer.py").string();
-        viz_script += " --coords \"" + path_coords + "\"";
-        viz_script += " --start \"" + std::to_string(start.latitude) + "," + std::to_string(start.longitude) + "\"";
-        viz_script += " --end \"" + std::to_string(end.latitude) + "," + std::to_string(end.longitude) + "\"";
+        viz_script += " --csv \"" + csv_path.string() + "\"";
         
         std::cout << "\nGenerating visualization..." << std::endl;
         if (system(viz_script.c_str()) != 0) {
