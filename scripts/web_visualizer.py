@@ -21,7 +21,7 @@ def is_within_bbox(lat: float, lon: float, bbox: List[float]) -> bool:
 
 def create_web_visualization(nodes_file: str, 
                            edges_file: str,
-                           output_file: str = "road_network.html") -> None:
+                           output_file: str = "visuals/road_network.html") -> None:
     """
     Creates an interactive web-based visualization of the road network using Folium.
     
@@ -167,8 +167,8 @@ def main():
                        default='data/edges.json',
                        help='Path to the edges JSON file')
     parser.add_argument('--output',
-                       default='road_network.html',
-                       help='Path where the HTML file will be saved')
+                       default='visuals/road_network.html',
+                       help='Path where the HTML file will be saved (default: visuals/road_network.html)')
     args = parser.parse_args()
     
     print("Interactive Web Road Network Visualizer")
