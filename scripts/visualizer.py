@@ -9,8 +9,11 @@ def main():
     parser.add_argument('--coords', type=str, required=True, help='Comma-separated list of coordinates (lat1,lon1,lat2,lon2,...)')
     parser.add_argument('--start', type=str, required=True, help='Start coordinates (lat,lon)')
     parser.add_argument('--end', type=str, required=True, help='End coordinates (lat,lon)')
-    parser.add_argument('--output', type=str, default='route.html', help='Output HTML file')
+    parser.add_argument('--output', type=str, default=os.path.join('results', 'route.html'), help='Output HTML file')
     args = parser.parse_args()
+
+    # Create results directory if it doesn't exist
+    os.makedirs('results', exist_ok=True)
 
     # Parse coordinates
     coords = [float(x) for x in args.coords.split(',')]
@@ -45,9 +48,20 @@ def main():
         icon=folium.Icon(color='red', icon='info-sign')
     ).add_to(m)
 
-    # Save map
+    # Calculate bounds
+    lats = [p[0] for p in path_points] + [start_lat, end_lat]
+    lons = [p[1] for p in path_points] + [start_lon, end_lon]
+    bounds = [[min(lats), min(lons)], [max(lats), max(lons)]]
+    
+    # Fit map to bounds
+    m.fit_bounds(bounds)
+    
+    # Save map to HTML file
     m.save(args.output)
-    print(f"Map saved to {os.path.abspath(args.output)}")
+    
+    # Open the map in default browser
+    import webbrowser
+    webbrowser.open(args.output)
 
 if __name__ == '__main__':
     main()
