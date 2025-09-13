@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
     std::string edges_file = std::filesystem::path(config.get_edges_file()).is_absolute() ?
         config.get_edges_file() : (project_root / config.get_edges_file()).string();
     
-    if (!loader.load(nodes_file, edges_file)) {
+    if (!loader.load(nodes_file, edges_file, &config)) {
         std::cerr << "Failed to load data" << std::endl;
         return 1;
     }

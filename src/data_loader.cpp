@@ -4,7 +4,10 @@
 
 namespace route_planner {
 
-bool DataLoader::load(const std::string& nodes_file, const std::string& edges_file) {
+bool DataLoader::load(const std::string& nodes_file, const std::string& edges_file, const Config* config) {
+    // Store config for edge filtering
+    config_ = config;
+    
     // Clear existing data
     nodes_.clear();
     edges_.clear();
@@ -69,7 +72,9 @@ bool DataLoader::parse_nodes(const nlohmann::json& json) {
 
 bool DataLoader::parse_edges(const nlohmann::json& json) {
     try {
-        edges_.reserve(json.size());  // Pre-allocate for efficiency
+        edges_.reserve(json.size());  // Pre-allocate for efficiency (may be less after filtering)
+        
+        int skipped_edges = 0;
         
         for (const auto& edge_data : json) {
             // Extract required fields
@@ -102,6 +107,12 @@ bool DataLoader::parse_edges(const nlohmann::json& json) {
                 edge.highway_type = edge_data["highway"].get<std::string>();
             }
             
+            // Check if this edge should be included based on highway type
+            if (!should_include_edge(edge.highway_type)) {
+                skipped_edges++;
+                continue;  // Skip this edge
+            }
+            
             if (edge_data.contains("name") && !edge_data["name"].is_null()) {
                 edge.name = edge_data["name"].get<std::string>();
             }
@@ -117,12 +128,40 @@ bool DataLoader::parse_edges(const nlohmann::json& json) {
             
             edges_.push_back(std::move(edge));
         }
+        
+        if (skipped_edges > 0) {
+            std::cout << "Filtered out " << skipped_edges << " non-car edges" << std::endl;
+        }
+        
         return true;
     }
     catch (const std::exception& e) {
         std::cerr << "Error parsing edges: " << e.what() << std::endl;
         return false;
     }
+}
+
+bool DataLoader::should_include_edge(const std::optional<std::string>& highway_type) const {
+    // If no config is provided, include all edges
+    if (!config_) {
+        return true;
+    }
+    
+    // If edge has no highway type, include it (use default speed)
+    if (!highway_type.has_value()) {
+        return true;
+    }
+    
+    // Check if this highway type has a speed of 0 (meaning it should be excluded)
+    double speed = config_->get_highway_speed(highway_type.value(), -1.0);  // Use -1 as sentinel value
+    
+    // If speed is 0, exclude this edge (not for cars)
+    if (speed == 0.0) {
+        return false;
+    }
+    
+    // Include all other edges
+    return true;
 }
 
 } // namespace route_planner
