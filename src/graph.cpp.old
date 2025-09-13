@@ -1,4 +1,25 @@
-#include "route_planner/graph.hpp"
+#include "route_p    std::vector<const Edge*> get_outgoing_edges(int64_t node_id) const {
+        std::vector<const Edge*> result;
+        
+        // Special case: node_id == -1 means return all edges
+        if (node_id == -1) {
+            result.reserve(edges_.size());
+            for (const auto& edge : edges_) {
+                result.push_back(&edge);
+            }
+            return result;
+        }
+        
+        auto it = adjacency_list_.find(node_id);
+        if (it != adjacency_list_.end()) {
+            result.reserve(it->second.size());
+            for (size_t edge_idx : it->second) {
+                result.push_back(&edges_[edge_idx]);
+            }
+        }
+        
+        return result;
+    }hpp"
 #include "route_planner/utils.hpp"
 #include <cmath>
 
@@ -17,15 +38,6 @@ const Node* Graph::get_node(int64_t id) const {
 
 std::vector<const Edge*> Graph::get_outgoing_edges(int64_t node_id) const {
     std::vector<const Edge*> result;
-    
-    // Special case: node_id == -1 means return all edges
-    if (node_id == -1) {
-        result.reserve(edges_.size());
-        for (const auto& edge : edges_) {
-            result.push_back(&edge);
-        }
-        return result;
-    }
     
     auto it = adjacency_list_.find(node_id);
     if (it != adjacency_list_.end()) {
@@ -69,5 +81,7 @@ void Graph::build_adjacency_list() {
         }
     }
 }
+
+
 
 } // namespace route_planner

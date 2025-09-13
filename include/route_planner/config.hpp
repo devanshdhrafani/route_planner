@@ -2,19 +2,9 @@
 
 #include <string>
 #include <yaml-cpp/yaml.h>
+#include "types.hpp"
 
 namespace route_planner {
-
-/**
- * Represents a geographical coordinate pair.
- */
-struct Coordinates {
-    double latitude;
-    double longitude;
-    
-    Coordinates(double lat = 0.0, double lon = 0.0) 
-        : latitude(lat), longitude(lon) {}
-};
 
 /**
  * Holds configuration settings for the route planner.
@@ -49,7 +39,46 @@ public:
      */
     const Coordinates& get_default_end() const { return default_end_; }
 
+    /**
+     * Get a configuration value of specified type with an optional default.
+     * 
+     * @param key Dot-separated path to the config value (e.g., "planner.type")
+     * @param default_value Value to return if key doesn't exist
+     * @return The config value of type T
+     */
+    template<typename T>
+    T get(const std::string& key, const T& default_value) const {
+        try {
+            YAML::Node node = config_;
+            size_t start = 0;
+            size_t end = key.find('.');
+            
+            // Navigate through the nested keys
+            while (end != std::string::npos) {
+                std::string part = key.substr(start, end - start);
+                if (!node[part]) {
+                    return default_value;
+                }
+                node = node[part];
+                start = end + 1;
+                end = key.find('.', start);
+            }
+            
+            // Get final key part
+            std::string final_key = key.substr(start);
+            if (!node[final_key]) {
+                return default_value;
+            }
+            
+            return node[final_key].as<T>();
+        }
+        catch (const YAML::Exception&) {
+            return default_value;
+        }
+    }
+
 private:
+    YAML::Node config_;
     std::string nodes_file_;
     std::string edges_file_;
     Coordinates default_start_;

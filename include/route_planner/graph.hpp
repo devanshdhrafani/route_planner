@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.hpp"
+#include "utils.hpp"
 #include <unordered_map>
 #include <vector>
 #include <memory>
@@ -59,12 +60,6 @@ private:
      * Called by init() after loading nodes and edges.
      */
     void build_adjacency_list();
-    
-    /**
-     * Calculate the great-circle distance between two points on Earth.
-     * Uses the Haversine formula.
-     */
-    static double haversine_distance(double lat1, double lon1, double lat2, double lon2);
 };
 
 } // namespace route_planner

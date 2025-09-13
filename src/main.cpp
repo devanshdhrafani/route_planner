@@ -1,10 +1,13 @@
 #include "route_planner/data_loader.hpp"
 #include "route_planner/graph.hpp"
 #include "route_planner/config.hpp"
+#include "route_planner/planner_factory.hpp"
+#include "route_planner/utils.hpp"
 #include <iostream>
 #include <filesystem>
 #include <cstdlib>
 #include <iomanip>
+#include <chrono>
 
 void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " [options]\n"
@@ -19,7 +22,7 @@ void print_usage(const char* program_name) {
 }
 
 int main(int argc, char* argv[]) {
-    // Default config file path
+    // Default config file path relative to build directory
     std::string config_file = "config/default.yaml";
     
     // Parse command line arguments
@@ -97,6 +100,61 @@ int main(int argc, char* argv[]) {
     std::cout << std::fixed << std::setprecision(6);
     std::cout << "Start: (" << start.latitude << ", " << start.longitude << ")" << std::endl;
     std::cout << "End  : (" << end.latitude << ", " << end.longitude << ")" << std::endl;
+
+    // Create planner
+    auto planner = route_planner::PlannerFactory::create(config);
+    
+    // Plan route
+    std::cout << "\nPlanning route..." << std::endl;
+    auto start_time = std::chrono::high_resolution_clock::now();
+    
+    auto result = planner->plan(graph, start, end);
+    
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    
+    if (!result.success) {
+        std::cerr << "Failed to find path!" << std::endl;
+        return 1;
+    }
+    
+    std::cout << "Path found! (" << duration.count() << "ms)" << std::endl;
+    std::cout << "Path length: " << result.path.size() << " nodes" << std::endl;
+
+    // Calculate total distance
+    double total_distance = 0.0;
+    for (size_t i = 1; i < result.path.size(); ++i) {
+        const auto* node1 = graph.get_node(result.path[i-1]);
+        const auto* node2 = graph.get_node(result.path[i]);
+        total_distance += route_planner::utils::haversine_distance(
+            node1->latitude, node1->longitude,
+            node2->latitude, node2->longitude
+        );
+    }
+    std::cout << "Total distance: " << total_distance << " km" << std::endl;
+
+    // Generate visualization
+    if (result.path.size() >= 2) {
+        std::string path_coords;
+        for (const auto& node_id : result.path) {
+            const auto* node = graph.get_node(node_id);
+            if (!path_coords.empty()) {
+                path_coords += ",";
+            }
+            path_coords += std::to_string(node->latitude) + "," + std::to_string(node->longitude);
+        }
+
+        // Create visualization script command
+        std::string viz_script = "../.venv/bin/python ../scripts/visualizer.py";
+        viz_script += " --coords \"" + path_coords + "\"";
+        viz_script += " --start \"" + std::to_string(start.latitude) + "," + std::to_string(start.longitude) + "\"";
+        viz_script += " --end \"" + std::to_string(end.latitude) + "," + std::to_string(end.longitude) + "\"";
+        
+        std::cout << "\nGenerating visualization..." << std::endl;
+        if (system(viz_script.c_str()) != 0) {
+            std::cerr << "Warning: Failed to generate visualization" << std::endl;
+        }
+    }
     
     return 0;
 }

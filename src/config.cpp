@@ -7,15 +7,15 @@ namespace route_planner {
 bool Config::load(const std::string& config_file) {
     try {
         // Load YAML file
-        YAML::Node config = YAML::LoadFile(config_file);
+        config_ = YAML::LoadFile(config_file);
         
         // Get data paths
-        if (!config["data"]) {
+        if (!config_["data"]) {
             std::cerr << "Error: Missing 'data' section in config file" << std::endl;
             return false;
         }
 
-        const auto& data = config["data"];
+        const auto& data = config_["data"];
         
         // Get nodes file path
         if (!data["nodes_file"]) {
@@ -32,8 +32,8 @@ bool Config::load(const std::string& config_file) {
         edges_file_ = data["edges_file"].as<std::string>();
         
         // Load default coordinates if available
-        if (config["defaults"]) {
-            const auto& defaults = config["defaults"];
+        if (config_["defaults"]) {
+            const auto& defaults = config_["defaults"];
             
             if (defaults["start"] && defaults["start"]["lat"] && defaults["start"]["lon"]) {
                 default_start_.latitude = defaults["start"]["lat"].as<double>();

@@ -22,6 +22,9 @@ add_library(route_planner_lib
     src/graph.cpp
     src/data_loader.cpp
     src/config.cpp
+    src/planner.cpp
+    src/planner_factory.cpp
+    src/astar_planner.cpp
 )
 
 target_include_directories(route_planner_lib

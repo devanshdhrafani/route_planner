@@ -6,6 +6,17 @@
 namespace route_planner {
 
 /**
+ * Represents a geographical coordinate pair.
+ */
+struct Coordinates {
+    double latitude;     // Latitude in degrees
+    double longitude;    // Longitude in degrees
+    
+    Coordinates(double lat = 0.0, double lon = 0.0)
+        : latitude(lat), longitude(lon) {}
+};
+
+/**
  * Represents a node (intersection) in the road network.
  */
 struct Node {
