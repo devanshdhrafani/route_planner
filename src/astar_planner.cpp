@@ -50,8 +50,17 @@ PlannerResult AStarPlanner::plan(const Graph& graph,
         
         // Explore neighbors
         for (const auto& edge_ptr : graph.get_outgoing_edges(current_id)) {
+            // Determine the neighbor node ID based on edge direction
+            int64_t neighbor_id;
+            if (edge_ptr->source == current_id) {
+                neighbor_id = edge_ptr->target;
+            } else if (!edge_ptr->oneway && edge_ptr->target == current_id) {
+                neighbor_id = edge_ptr->source;
+            } else {
+                continue;  // Skip if we can't traverse this edge
+            }
+            
             double tentative_g = node_states[current_id].g_score + edge_ptr->distance;
-            int64_t neighbor_id = edge_ptr->target;
             
             // If we haven't visited this node or found a better path
             if (node_states.find(neighbor_id) == node_states.end() ||
@@ -111,15 +120,29 @@ PlannerResult AStarPlanner::reconstruct_path(const Graph& graph,
     // Reverse to get start-to-goal order
     std::reverse(path.begin(), path.end());
     
-    // Calculate total distance
+    // Calculate total distance using actual edge distances
     double total_distance = 0.0;
     for (size_t i = 1; i < path.size(); ++i) {
-        const auto* node1 = graph.get_node(path[i-1]);
-        const auto* node2 = graph.get_node(path[i]);
-        total_distance += utils::haversine_distance(
-            node1->latitude, node1->longitude,
-            node2->latitude, node2->longitude
-        );
+        int64_t from_id = path[i-1];
+        int64_t to_id = path[i];
+        bool found_edge = false;
+        
+        // Find the edge between these nodes
+        for (const auto* edge : graph.get_outgoing_edges(from_id)) {
+            if ((edge->source == from_id && edge->target == to_id) ||
+                (!edge->oneway && edge->target == from_id && edge->source == to_id)) {
+                total_distance += edge->distance;
+                found_edge = true;
+                break;
+            }
+        }
+        
+        if (!found_edge) {
+            // This should never happen if the path is valid
+            PlannerResult result;
+            result.success = false;
+            return result;
+        }
     }
     
     PlannerResult result;
