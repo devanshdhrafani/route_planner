@@ -99,6 +99,8 @@ def create_web_visualization(nodes_file: str,
                 Type: {highway}<br>
                 Speed Limit: {maxspeed}<br>
                 One-way: {oneway}<br>
+                Start Node ID: {u_id}<br>
+                End Node ID: {v_id}<br>
             """
             
             # Filter edges outside bounding box if bbox is available
@@ -161,10 +163,10 @@ def create_web_visualization(nodes_file: str,
 def main():
     parser = argparse.ArgumentParser(description='Interactive Web Road Network Visualizer')
     parser.add_argument('--nodes', 
-                       default='data/nodes.json',
+                       default='data/nodes_bbox_-80.031_40.410_-79.896_40.494.json',
                        help='Path to the nodes JSON file')
     parser.add_argument('--edges', 
-                       default='data/edges.json',
+                       default='data/edges_bbox_-80.031_40.410_-79.896_40.494.json',
                        help='Path to the edges JSON file')
     parser.add_argument('--output',
                        default='visuals/road_network.html',
