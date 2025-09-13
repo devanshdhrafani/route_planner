@@ -193,15 +193,15 @@ int main(int argc, char* argv[]) {
             std::cerr << "Warning: Failed to save path to CSV file" << std::endl;
         }
 
-        // Generate visualization using the CSV file
-        std::string viz_script = (project_root / ".venv/bin/python").string();
-        viz_script += " " + (project_root / "scripts/visualizer.py").string();
-        viz_script += " --csv \"" + csv_path.string() + "\"";
+        // // Generate visualization using the CSV file
+        // std::string viz_script = (project_root / ".venv/bin/python").string();
+        // viz_script += " " + (project_root / "scripts/visualizer.py").string();
+        // viz_script += " --csv \"" + csv_path.string() + "\"";
         
-        std::cout << "\nGenerating visualization..." << std::endl;
-        if (system(viz_script.c_str()) != 0) {
-            std::cerr << "Warning: Failed to generate visualization" << std::endl;
-        }
+        // std::cout << "\nGenerating visualization..." << std::endl;
+        // if (system(viz_script.c_str()) != 0) {
+        //     std::cerr << "Warning: Failed to generate visualization" << std::endl;
+        // }
     }
     
     return 0;
