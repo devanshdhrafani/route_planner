@@ -1,0 +1,107 @@
+
+================================================================================
+HIGHWAY AND SPEED ANALYSIS REPORT
+================================================================================
+
+📊 OVERALL STATISTICS
+Total edges:              215,458
+Edges with highway:       215,458 (100.0%)
+Edges with maxspeed:      110,013 (51.1%)
+Edges with both:          110,013 (51.1%)
+
+🛣️  HIGHWAY TYPES (22 unique types)
+------------------------------------------------------------
+bus_stop                    4 edges (  0.0%)
+busway                    756 edges (  0.4%)
+construction                5 edges (  0.0%)
+cycleway                   14 edges (  0.0%)
+escape                      5 edges (  0.0%)
+footway                    76 edges (  0.0%)
+living_street              26 edges (  0.0%)
+motorway               47,402 edges ( 22.0%)
+motorway_link           5,564 edges (  2.6%)
+path                       28 edges (  0.0%)
+primary                34,459 edges ( 16.0%)
+primary_link            1,179 edges (  0.5%)
+residential            27,872 edges ( 12.9%)
+secondary              18,027 edges (  8.4%)
+secondary_link            355 edges (  0.2%)
+service                31,188 edges ( 14.5%)
+tertiary               17,900 edges (  8.3%)
+tertiary_link             201 edges (  0.1%)
+track                      17 edges (  0.0%)
+trunk                  24,592 edges ( 11.4%)
+trunk_link              1,062 edges (  0.5%)
+unclassified            4,726 edges (  2.2%)
+
+🚗 MAX SPEEDS (14 unique values)
+------------------------------------------------------------
+10 mph                     48 edges (  0.0%)
+15 mph                    666 edges (  0.3%)
+20 mph                    407 edges (  0.2%)
+25 mph                 14,612 edges (  6.8%)
+30 mph                  1,285 edges (  0.6%)
+35 mph                 13,772 edges (  6.4%)
+40 mph                 10,277 edges (  4.8%)
+45 mph                 11,920 edges (  5.5%)
+5 mph                      93 edges (  0.0%)
+50 mph                  3,310 edges (  1.5%)
+55 mph                 25,652 edges ( 11.9%)
+65 mph                  7,723 edges (  3.6%)
+70 mph                 20,146 edges (  9.4%)
+signals                   102 edges (  0.0%)
+
+🗺️  HIGHWAY TYPE → SPEED LIMITS
+------------------------------------------------------------
+living_street        → 10 mph
+motorway             → 15 mph, 25 mph, 35 mph, 40 mph, 45 mph, 5 mph, 50 mph, 55 mph, 65 mph, 70 mph, signals
+motorway_link        → 20 mph, 25 mph, 30 mph, 35 mph, 40 mph, 5 mph, 50 mph, 55 mph, 70 mph
+primary              → 25 mph, 30 mph, 35 mph, 40 mph, 45 mph, 50 mph, 55 mph
+primary_link         → 25 mph, 30 mph, 35 mph, 45 mph
+residential          → 10 mph, 15 mph, 20 mph, 25 mph, 35 mph
+secondary            → 15 mph, 25 mph, 30 mph, 35 mph, 40 mph, 45 mph, 55 mph
+secondary_link       → 25 mph, 35 mph
+service              → 10 mph, 15 mph, 20 mph, 25 mph, 35 mph, 5 mph
+tertiary             → 15 mph, 20 mph, 25 mph, 30 mph, 35 mph, 40 mph, 45 mph, 55 mph
+tertiary_link        → 35 mph
+trunk                → 20 mph, 25 mph, 30 mph, 35 mph, 40 mph, 45 mph, 50 mph, 55 mph
+trunk_link           → 15 mph, 25 mph, 30 mph, 35 mph, 40 mph
+unclassified         → 10 mph, 15 mph, 20 mph, 25 mph, 35 mph
+
+🚦 SPEED LIMIT → HIGHWAY TYPES
+------------------------------------------------------------
+10 mph               → living_street, residential, service, unclassified
+15 mph               → motorway, residential, secondary, service, tertiary, trunk_link, unclassified
+20 mph               → motorway_link, residential, service, tertiary, trunk, unclassified
+25 mph               → motorway, motorway_link, primary, primary_link, residential, secondary, secondary_link, service, tertiary, trunk, trunk_link, unclassified
+30 mph               → motorway_link, primary, primary_link, secondary, tertiary, trunk, trunk_link
+35 mph               → motorway, motorway_link, primary, primary_link, residential, secondary, secondary_link, service, tertiary, tertiary_link, trunk, trunk_link, unclassified
+40 mph               → motorway, motorway_link, primary, secondary, tertiary, trunk, trunk_link
+45 mph               → motorway, primary, primary_link, secondary, tertiary, trunk
+5 mph                → motorway, motorway_link, service
+50 mph               → motorway, motorway_link, primary, trunk
+55 mph               → motorway, motorway_link, primary, secondary, tertiary, trunk
+65 mph               → motorway
+70 mph               → motorway, motorway_link
+signals              → motorway
+
+🔍 DATA QUALITY INSIGHTS
+------------------------------------------------------------
+⚠️  105,445 edges (48.9%) missing max speed
+⚠️  105,445 edges (48.9%) missing both highway and speed
+
+📈 TOP 5 MOST COMMON
+------------------------------------------------------------
+Highway Types:
+  motorway        47,402 edges
+  primary         34,459 edges
+  service         31,188 edges
+  residential     27,872 edges
+  trunk           24,592 edges
+
+Speed Limits:
+  55 mph          25,652 edges
+  70 mph          20,146 edges
+  25 mph          14,612 edges
+  35 mph          13,772 edges
+  45 mph          11,920 edges
