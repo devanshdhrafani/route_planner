@@ -22,8 +22,12 @@ void print_usage(const char* program_name) {
 }
 
 int main(int argc, char* argv[]) {
-    // Default config file path relative to build directory
-    std::string config_file = "config/default.yaml";
+    // Find project root directory (one level up from bin)
+    std::filesystem::path exe_path = std::filesystem::canonical("/proc/self/exe");
+    std::filesystem::path project_root = exe_path.parent_path().parent_path();
+    
+    // Default config file path
+    std::string config_file = (project_root / "config/default.yaml").string();
     
     // Parse command line arguments
     route_planner::Coordinates start, end;
@@ -37,7 +41,11 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         else if (arg == "--config" && i + 1 < argc) {
-            config_file = argv[++i];
+            if (std::filesystem::path(argv[i+1]).is_absolute()) {
+                config_file = argv[++i];
+            } else {
+                config_file = (project_root / argv[++i]).string();
+            }
         }
         else if (arg == "--start-lat" && i + 1 < argc) {
             start.latitude = std::atof(argv[++i]);
@@ -78,7 +86,14 @@ int main(int argc, char* argv[]) {
     }
     
     route_planner::DataLoader loader;
-    if (!loader.load(config.get_nodes_file(), config.get_edges_file())) {
+    // Convert relative paths to absolute using project root
+    std::string nodes_file = std::filesystem::path(config.get_nodes_file()).is_absolute() ? 
+        config.get_nodes_file() : (project_root / config.get_nodes_file()).string();
+    
+    std::string edges_file = std::filesystem::path(config.get_edges_file()).is_absolute() ?
+        config.get_edges_file() : (project_root / config.get_edges_file()).string();
+    
+    if (!loader.load(nodes_file, edges_file)) {
         std::cerr << "Failed to load data" << std::endl;
         return 1;
     }
@@ -144,8 +159,9 @@ int main(int argc, char* argv[]) {
             path_coords += std::to_string(node->latitude) + "," + std::to_string(node->longitude);
         }
 
-        // Create visualization script command
-        std::string viz_script = "../.venv/bin/python ../scripts/visualizer.py";
+        // Create visualization script command with absolute path
+        std::string viz_script = (project_root / ".venv/bin/python").string();
+        viz_script += " " + (project_root / "scripts/visualizer.py").string();
         viz_script += " --coords \"" + path_coords + "\"";
         viz_script += " --start \"" + std::to_string(start.latitude) + "," + std::to_string(start.longitude) + "\"";
         viz_script += " --end \"" + std::to_string(end.latitude) + "," + std::to_string(end.longitude) + "\"";
