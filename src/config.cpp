@@ -31,6 +31,21 @@ bool Config::load(const std::string& config_file) {
         }
         edges_file_ = data["edges_file"].as<std::string>();
         
+        // Load default coordinates if available
+        if (config["defaults"]) {
+            const auto& defaults = config["defaults"];
+            
+            if (defaults["start"] && defaults["start"]["lat"] && defaults["start"]["lon"]) {
+                default_start_.latitude = defaults["start"]["lat"].as<double>();
+                default_start_.longitude = defaults["start"]["lon"].as<double>();
+            }
+            
+            if (defaults["end"] && defaults["end"]["lat"] && defaults["end"]["lon"]) {
+                default_end_.latitude = defaults["end"]["lat"].as<double>();
+                default_end_.longitude = defaults["end"]["lon"].as<double>();
+            }
+        }
+        
         // Make paths relative to the config file location
         std::filesystem::path config_dir = std::filesystem::path(config_file).parent_path();
         nodes_file_ = (config_dir / nodes_file_).lexically_normal().string();

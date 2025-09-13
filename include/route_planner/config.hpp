@@ -6,6 +6,17 @@
 namespace route_planner {
 
 /**
+ * Represents a geographical coordinate pair.
+ */
+struct Coordinates {
+    double latitude;
+    double longitude;
+    
+    Coordinates(double lat = 0.0, double lon = 0.0) 
+        : latitude(lat), longitude(lon) {}
+};
+
+/**
  * Holds configuration settings for the route planner.
  */
 class Config {
@@ -28,9 +39,21 @@ public:
      */
     const std::string& get_edges_file() const { return edges_file_; }
 
+    /**
+     * Get default start coordinates.
+     */
+    const Coordinates& get_default_start() const { return default_start_; }
+
+    /**
+     * Get default end coordinates.
+     */
+    const Coordinates& get_default_end() const { return default_end_; }
+
 private:
     std::string nodes_file_;
     std::string edges_file_;
+    Coordinates default_start_;
+    Coordinates default_end_;
 };
 
 } // namespace route_planner
