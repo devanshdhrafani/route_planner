@@ -1,10 +1,13 @@
 # Route Planner
 
-A C++ route planning system with A* algorithm implementation for OpenStreetMap road networks.
+A C++ route planning system with graph search algorithm implementations for OpenStreetMap road networks.
+
+![](images/seventh-ave-traffic1.png)
 
 ## Features
 
-- **A* Path Planning**: Distance and time-based route optimization
+- **A\* Path Planning**: Distance and time-based route optimization
+- **Extensible Architecture**: Planner factory for easy addition and testing of new algorithms
 - **Traffic Modeling**: Edge-specific speed modifications and traffic conditions
 - **Highway Type Support**: Intelligent speed defaults based on road classification
 - **Interactive Visualization**: Web-based route and traffic overlay maps
@@ -60,43 +63,46 @@ make
 
 ## Usage
 
-### Basic Route Planning
+### Data Processing
+You will need to download an OpenStreetMap data file (PBF). Depending on bounding box area, this can get very large. I used [bbox finder](http://bboxfinder.com/#0.000000,0.000000,0.000000,0.000000) tool to download a map of Downtown Pittsburgh and neighbouring areas.  
 
+Download OSM data:
 ```bash
-./bin/route_planner --start-lat 40.4499 --start-lon -79.9862 --end-lat 40.4334 --end-lon -79.9583
+python scripts/osm_downloader.py --bbox -80.031 40.410 -79.896 40.494
+``` 
+
+Extract nodes and edges from OSM data file:
+```bash
+python scripts/osm_parser.py --input data/bbox_*.pbf --output-dir data/
 ```
 
 ### Configuration
 
-Edit `config/default.yaml` to set:
+Before you can plan routes, you will need to configure the planner. Edit `config/default.yaml` or create your own config with:
+- Planner type and cost functions
 - Data file paths
 - Highway speed defaults
 - Traffic conditions
 - Default start/end coordinates
 
-### Visualization
+### Basic Route Planning
+```bash
+./bin/route_planner --start-lat 40.4499 --start-lon -79.9862 --end-lat 40.4334 --end-lon -79.9583
+```
 
+### Visualization
+Interactive web-based visualizer with traffic support 
 ```bash
 python scripts/visualizer.py --csv results/route_time_*.csv --show-traffic
 ```
 
-### Data Processing
+## Future Work
 
-Download OSM data:
-```bash
-python scripts/osm_downloader.py --bbox -80.031 40.410 -79.896 40.494
-```
-
-Parse to JSON format:
-```bash
-python scripts/osm_parser.py --input data/bbox_*.pbf --output-dir data/
-```
-
-## Output
-
-- Route results: `results/*.csv`
-- Interactive maps: `results/*.html`
-- Performance metrics and statistics
+- **Advanced Algorithms**: Anytime A\*/D\*, D\* Lite, weight reuse from previous iterations
+- **Turn Penalties**: Incorporate realistic turning costs at intersections
+- **Multi-objective Cost Functions**: Optimize for multiple criteria simultaneously (time, distance, fuel, safety)
+- **Lane-aware Planning**: Utilize detailed lane information for more accurate routing
+- **Emergency Scenarios**: Support for road closures and emergency vehicle response
 
 ## License
 
