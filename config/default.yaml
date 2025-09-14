@@ -33,15 +33,30 @@ data:
 
 # Default coordinates
 defaults:
+  # East Liberty
   # start: 
   #   lat: 40.464834
   #   lon: -79.934860
+  
+  # Cinderlands 
+  # start:
+  #   lat: 40.455911
+  #   lon: -79.979289
+  
+  # Pamela's Diner
   start:
-    lat: 40.455911
-    lon: -79.979289
+    lat: 40.449984
+    lon: -79.986155
+
+  # SQH
+  # end:
+  #   lat: 40.435679
+  #   lon: -79.922490
+  
+  # South Oakland
   end:
-    lat: 40.435679
-    lon: -79.922490
+    lat: 40.433441
+    lon: -79.958303
 
 # Future planner parameters can go here
 planner:
