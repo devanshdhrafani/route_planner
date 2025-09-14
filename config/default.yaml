@@ -36,17 +36,13 @@ traffic:
   # Specific edge modifications
   # Format: "source_id-target_id" -> speed_override (mph) or multiplier
   edges:
-    # Real edge with heavy traffic (Main Street)
-    "8815741726-4491753308": 
-      type: "multiplier"     # Multiply existing speed
-      value: 0.1             # 10% of normal speed (heavy traffic)
-    "4491753308-8815741726":
-      type: "multiplier"     # Apply to both directions
-      value: 0.1             # 10% of normal speed (heavy traffic)
-    # Another edge with speed override
-    # "123456-789012":
-    #   type: "speed_override"
-    #   value: 10               # Set to 10 mph due to construction
+    # Real edge with heavy traffic (Seventh Avenue)
+    # "8815741726-4491753308": 
+    #   type: "multiplier"     # Multiply existing speed
+    #   value: 0.1             # 10% of normal speed (heavy traffic)
+    # "4491753308-8815741726":
+    #   type: "multiplier"     # Apply to both directions
+    #   value: 0.1             # 10% of normal speed (heavy traffic)
 
 # Default coordinates
 defaults:
