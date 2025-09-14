@@ -40,6 +40,7 @@ private:
     std::unordered_map<int64_t, Node> nodes_;
     std::vector<Edge> edges_;
     const Config* config_;  // Configuration for edge filtering
+    TrafficConfig traffic_config_;  // Traffic modifications
     
     /**
      * Parse nodes from JSON data.
@@ -61,6 +62,12 @@ private:
      * @return True if the edge should be included, false otherwise
      */
     bool should_include_edge(const std::optional<std::string>& highway_type) const;
+    
+    /**
+     * Apply traffic modifications to an edge.
+     * @param edge The edge to modify
+     */
+    void apply_traffic_modifications(Edge& edge) const;
 };
 
 } // namespace route_planner

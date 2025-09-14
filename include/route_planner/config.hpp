@@ -93,6 +93,13 @@ public:
      */
     double get_highway_speed(const std::string& highway_type, double fallback_speed = 25.0) const;
 
+    /**
+     * Get traffic configuration.
+     * 
+     * @return TrafficConfig object with all traffic modifications
+     */
+    TrafficConfig get_traffic_config() const;
+
 private:
     YAML::Node config_;
     std::string nodes_file_;

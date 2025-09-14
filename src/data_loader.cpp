@@ -8,6 +8,11 @@ bool DataLoader::load(const std::string& nodes_file, const std::string& edges_fi
     // Store config for edge filtering
     config_ = config;
     
+    // Load traffic configuration if config is provided
+    if (config_) {
+        traffic_config_ = config_->get_traffic_config();
+    }
+    
     // Clear existing data
     nodes_.clear();
     edges_.clear();
@@ -75,6 +80,7 @@ bool DataLoader::parse_edges(const nlohmann::json& json) {
         edges_.reserve(json.size());  // Pre-allocate for efficiency (may be less after filtering)
         
         int skipped_edges = 0;
+        int traffic_modified_edges = 0;
         
         for (const auto& edge_data : json) {
             // Extract required fields
@@ -126,11 +132,22 @@ bool DataLoader::parse_edges(const nlohmann::json& json) {
                 }
             }
             
+            // Apply traffic modifications to the edge
+            double original_speed = edge.max_speed.value_or(0.0);
+            apply_traffic_modifications(edge);
+            if (original_speed != edge.max_speed.value_or(0.0)) {
+                traffic_modified_edges++;
+            }
+            
             edges_.push_back(std::move(edge));
         }
         
         if (skipped_edges > 0) {
             std::cout << "Filtered out " << skipped_edges << " non-car edges" << std::endl;
+        }
+        
+        if (traffic_modified_edges > 0) {
+            std::cout << "Applied traffic modifications to " << traffic_modified_edges << " edges" << std::endl;
         }
         
         return true;
@@ -162,6 +179,52 @@ bool DataLoader::should_include_edge(const std::optional<std::string>& highway_t
     
     // Include all other edges
     return true;
+}
+
+void DataLoader::apply_traffic_modifications(Edge& edge) const {
+    // Skip if no config
+    if (!config_) {
+        return;
+    }
+    
+    // Check for specific edge modifications
+    std::string edge_key = std::to_string(edge.source) + "-" + std::to_string(edge.target);
+    auto edge_mod_it = traffic_config_.edge_modifications.find(edge_key);
+    
+    // If no edge modification found, skip processing
+    if (edge_mod_it == traffic_config_.edge_modifications.end()) {
+        return;
+    }
+    
+    // Get current speed (either explicit or from highway type)
+    double current_speed = 25.0;  // Default fallback
+    if (edge.max_speed.has_value()) {
+        current_speed = edge.max_speed.value();
+        // Convert km/h to mph if needed (assume > 80 is km/h)
+        if (current_speed > 80) {
+            current_speed *= 0.621371;
+        }
+    } else if (edge.highway_type.has_value()) {
+        current_speed = config_->get_highway_speed(edge.highway_type.value(), 25.0);
+    }
+    
+    // Apply the specific edge modification
+    const auto& modification = edge_mod_it->second;
+    double modified_speed;
+    
+    if (modification.type == TrafficModification::SPEED_OVERRIDE) {
+        modified_speed = modification.value;
+    } else if (modification.type == TrafficModification::MULTIPLIER) {
+        modified_speed = current_speed * modification.value;
+    } else {
+        return;  // Unknown modification type
+    }
+    
+    // Ensure minimum speed (prevent zero or negative speeds)
+    modified_speed = std::max(modified_speed, 1.0);
+    
+    // Update the edge's max_speed
+    edge.max_speed = modified_speed;
 }
 
 } // namespace route_planner

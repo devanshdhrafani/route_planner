@@ -98,4 +98,49 @@ double Config::get_highway_speed(const std::string& highway_type, double fallbac
     return fallback_speed;
 }
 
+TrafficConfig Config::get_traffic_config() const {
+    TrafficConfig traffic_config;
+    
+    try {
+        if (!config_["traffic"]) {
+            // No traffic section, return default config
+            return traffic_config;
+        }
+        
+        const auto& traffic = config_["traffic"];
+        
+        // Edge-specific modifications
+        if (traffic["edges"]) {
+            const auto& edges = traffic["edges"];
+            for (const auto& edge_pair : edges) {
+                std::string edge_key = edge_pair.first.as<std::string>();  // "source_id-target_id"
+                const auto& modification = edge_pair.second;
+                
+                if (modification["type"] && modification["value"]) {
+                    std::string type_str = modification["type"].as<std::string>();
+                    double value = modification["value"].as<double>();
+                    
+                    TrafficModification::Type type;
+                    if (type_str == "speed_override") {
+                        type = TrafficModification::SPEED_OVERRIDE;
+                    } else if (type_str == "multiplier") {
+                        type = TrafficModification::MULTIPLIER;
+                    } else {
+                        std::cerr << "Warning: Unknown traffic modification type: " << type_str << std::endl;
+                        continue;
+                    }
+                    
+                    traffic_config.edge_modifications.emplace(edge_key, TrafficModification(type, value));
+                }
+            }
+        }
+        
+    }
+    catch (const YAML::Exception& e) {
+        std::cerr << "Warning: Error loading traffic config: " << e.what() << std::endl;
+    }
+    
+    return traffic_config;
+}
+
 } // namespace route_planner

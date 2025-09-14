@@ -2,6 +2,8 @@
 
 #include <string>
 #include <optional>
+#include <unordered_map>
+#include <vector>
 
 namespace route_planner {
 
@@ -14,6 +16,28 @@ struct Coordinates {
     
     Coordinates(double lat = 0.0, double lon = 0.0)
         : latitude(lat), longitude(lon) {}
+};
+
+/**
+ * Traffic modification for a specific edge.
+ */
+struct TrafficModification {
+    enum Type {
+        SPEED_OVERRIDE,  // Set absolute speed
+        MULTIPLIER      // Multiply existing speed
+    };
+    
+    Type type;
+    double value;  // New speed (mph) or multiplier factor
+    
+    TrafficModification(Type t, double v) : type(t), value(v) {}
+};
+
+/**
+ * Complete traffic configuration.
+ */
+struct TrafficConfig {
+    std::unordered_map<std::string, TrafficModification> edge_modifications;  // Key: "source_id-target_id"
 };
 
 /**
