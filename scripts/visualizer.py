@@ -6,6 +6,53 @@ import argparse
 import os
 from pathlib import Path
 import webbrowser
+import yaml
+import json
+
+def read_traffic_config(config_path):
+    """Read traffic configuration from YAML file"""
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        traffic_edges = {}
+        if 'traffic' in config and 'edges' in config['traffic']:
+            for edge_key, modification in config['traffic']['edges'].items():
+                traffic_edges[edge_key] = modification
+        
+        return traffic_edges
+    except Exception as e:
+        print(f"Warning: Could not read traffic config: {e}")
+        return {}
+
+def load_edge_data(edges_file):
+    """Load edge data from JSON file for traffic visualization"""
+    try:
+        with open(edges_file, 'r') as f:
+            edges = json.load(f)
+        
+        # Create a mapping from "source-target" to edge data
+        edge_lookup = {}
+        for edge in edges:
+            source = edge['u']
+            target = edge['v']
+            edge_key = f"{source}-{target}"
+            edge_lookup[edge_key] = edge
+            
+        return edge_lookup
+    except Exception as e:
+        print(f"Warning: Could not load edge data: {e}")
+        return {}
+
+def load_node_data(nodes_file):
+    """Load node data from JSON file"""
+    try:
+        with open(nodes_file, 'r') as f:
+            nodes = json.load(f)
+        return nodes
+    except Exception as e:
+        print(f"Warning: Could not load node data: {e}")
+        return {}
 
 def read_route_csv_with_metadata(csv_path):
     """Read CSV file and extract both metadata and path data"""
@@ -31,21 +78,58 @@ def get_route_color(cost_function, index):
     """Get color for route based on cost function and index"""
     colors = {
         'distance': ['blue', 'darkblue', 'lightblue'],
-        'time': ['red', 'darkred', 'pink']
+        'time': ['green', 'darkgreen', 'lightgreen']
     }
     
     if cost_function in colors:
         return colors[cost_function][index % len(colors[cost_function])]
     else:
         # Fallback colors for unknown cost functions
-        fallback_colors = ['green', 'purple', 'orange', 'gray', 'black']
+        fallback_colors = ['purple', 'orange', 'gray', 'black']
         return fallback_colors[index % len(fallback_colors)]
 
 def main():
-    parser = argparse.ArgumentParser(description='Visualize one or more routes on a map')
+    parser = argparse.ArgumentParser(description='Visualize one or more routes on a map with traffic conditions')
     parser.add_argument('--csv', type=str, nargs='+', required=True, 
                        help='Path(s) to CSV file(s) containing route(s). Can specify multiple files.')
+    parser.add_argument('--config', type=str, default='config/default.yaml',
+                       help='Path to configuration file with traffic data')
+    parser.add_argument('--show-traffic', action='store_true', default=True,
+                       help='Show traffic-affected edges on the map')
+    parser.add_argument('--no-traffic', action='store_true', default=False,
+                       help='Hide traffic conditions (show routes only)')
     args = parser.parse_args()
+
+    # Handle traffic display logic
+    if args.no_traffic:
+        args.show_traffic = False
+
+    # Load traffic configuration and edge data if showing traffic
+    traffic_edges = {}
+    edge_lookup = {}
+    node_lookup = {}
+    
+    if args.show_traffic:
+        # Try to find config and data files relative to CSV location
+        csv_dir = Path(args.csv[0]).parent.parent  # Go up from results/ to project root
+        config_path = csv_dir / args.config
+        
+        if config_path.exists():
+            traffic_edges = read_traffic_config(config_path)
+            print(f"Loaded {len(traffic_edges)} traffic conditions from config")
+            
+            # Load edge and node data for visualization
+            edges_file = csv_dir / "data/edges_bbox_-80.031_40.410_-79.896_40.494.json"
+            nodes_file = csv_dir / "data/nodes_bbox_-80.031_40.410_-79.896_40.494.json"
+            
+            if edges_file.exists() and nodes_file.exists():
+                edge_lookup = load_edge_data(edges_file)
+                node_lookup = load_node_data(nodes_file)
+                print(f"Loaded {len(edge_lookup)} edges and {len(node_lookup)} nodes for traffic visualization")
+            else:
+                print("Warning: Could not find edge/node data files for traffic visualization")
+        else:
+            print(f"Warning: Config file not found at {config_path}")
 
     if len(args.csv) == 1:
         print(f"Visualizing single route from: {args.csv[0]}")
@@ -155,6 +239,76 @@ def main():
                 icon=folium.Icon(color='red', icon='stop')
             ).add_to(m)
 
+    # Add traffic-affected edges to the map
+    if args.show_traffic and traffic_edges and edge_lookup and node_lookup:
+        print(f"Adding {len(traffic_edges)} traffic-affected edges to map...")
+        
+        for edge_key, modification in traffic_edges.items():
+            if edge_key in edge_lookup:
+                edge = edge_lookup[edge_key]
+                source_id = str(edge['u'])
+                target_id = str(edge['v'])
+                
+                if source_id in node_lookup and target_id in node_lookup:
+                    source_node = node_lookup[source_id]
+                    target_node = node_lookup[target_id]
+                    
+                    # Determine traffic color based on modification
+                    traffic_color = '#FF4500'  # Default bright orange for traffic
+                    traffic_weight = 6
+                    traffic_opacity = 0.5
+                    traffic_dash_array = None
+                    
+                    if modification['type'] == 'multiplier':
+                        multiplier = modification['value']
+                        if multiplier <= 0.3:
+                            traffic_color = '#FF0000'  # Bright red for heavy traffic
+                            traffic_weight = 8
+                            traffic_dash_array = None
+                            traffic_opacity = 0.5
+                        elif multiplier <= 0.6:
+                            traffic_color = '#FF4500'  # Bright orange for moderate traffic
+                            traffic_weight = 6
+                            traffic_dash_array = '8,4'
+                            traffic_opacity = 0.5
+                        else:
+                            traffic_color = '#FFA500'  # Orange for light traffic
+                            traffic_weight = 5
+                            traffic_dash_array = '12,6'
+                            traffic_opacity = 0.5
+                    elif modification['type'] == 'speed_override':
+                        traffic_color = '#8B0000'  # Dark red for speed overrides (construction)
+                        traffic_weight = 10
+                        traffic_dash_array = '4,4'
+                        traffic_opacity = 0.7
+                    
+                    # Create traffic edge
+                    traffic_coords = [
+                        [source_node['lat'], source_node['lon']],
+                        [target_node['lat'], target_node['lon']]
+                    ]
+                    
+                    # Create popup with traffic info
+                    popup_text = f"""
+                        <div style="font-family: Arial; font-size: 12px;">
+                            <b>🚦 Traffic Condition</b><br>
+                            Edge: {edge_key}<br>
+                            Type: {modification['type']}<br>
+                            Value: {modification['value']}<br>
+                            Road: {edge.get('name', 'Unnamed')}<br>
+                            Highway: {edge.get('highway', 'Unknown')}
+                        </div>
+                    """
+                    
+                    folium.PolyLine(
+                        traffic_coords,
+                        weight=traffic_weight,
+                        color=traffic_color,
+                        opacity=traffic_opacity,
+                        dash_array=traffic_dash_array,
+                        popup=folium.Popup(popup_text, max_width=300)
+                    ).add_to(m)
+
     # Add enhanced legend showing all routes
     legend_html = """
     <div style="position: fixed; 
@@ -190,6 +344,42 @@ def main():
                 📏 Distance: <strong>{metadata.get('total_distance_km', 0) * 0.621371:.2f} miles</strong><br>
                 ⏱️ Time: <strong>{metadata.get('total_time_minutes', 0):.1f} min</strong>
             </div>
+        </div>
+        """
+    
+    # Add traffic legend if traffic is shown
+    if args.show_traffic and traffic_edges:
+        legend_html += """
+        <div style="margin-top: 10px; padding: 8px; 
+                    border-top: 2px solid #ddd; 
+                    background-color: #fff3e0; border-radius: 4px;">
+            <h4 style="margin: 0 0 8px 0; color: #333;">🚦 Traffic Conditions</h4>
+            <div style="margin: 4px 0;">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 30px; height: 4px; background-color: #FF0000; 
+                               margin-right: 10px; border-radius: 2px;"></div>
+                    <small><b>Heavy Traffic (≤30% speed)</b></small>
+                </div>
+            </div>
+            <div style="margin: 4px 0;">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 30px; height: 4px; background-color: #FF4500; 
+                               margin-right: 10px; border-radius: 2px; 
+                               background-image: repeating-linear-gradient(90deg, #FF4500, #FF4500 8px, transparent 8px, transparent 12px);"></div>
+                    <small><b>Moderate Traffic (≤60% speed)</b></small>
+                </div>
+            </div>
+            <div style="margin: 4px 0;">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 30px; height: 5px; background-color: #8B0000; 
+                               margin-right: 10px; border-radius: 2px; 
+                               background-image: repeating-linear-gradient(90deg, #8B0000, #8B0000 4px, transparent 4px, transparent 8px);"></div>
+                    <small><b>Construction/Override</b></small>
+                </div>
+            </div>
+            <small style="color: #666; font-style: italic;">
+                """ + str(len(traffic_edges)) + """ traffic condition(s) applied
+            </small>
         </div>
         """
     
