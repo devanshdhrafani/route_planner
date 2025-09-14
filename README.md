@@ -8,10 +8,10 @@ A C++ route planning system with graph search algorithm implementations for Open
 
 - **A\* Path Planning**: Distance and time-based route optimization
 - **Extensible Architecture**: Planner factory for easy addition and testing of new algorithms
-- **Traffic Modeling**: Edge-specific speed modifications and traffic conditions
-- **Highway Type Support**: Intelligent speed defaults based on road classification
-- **Interactive Visualization**: Web-based route and traffic overlay maps
-- **OSM Data Processing**: Download and parse OpenStreetMap data
+- **Traffic Modeling**: Edge-specific speed modification based on traffic conditions
+- **Road Type Support**: Intelligent speed defaults based on road classification
+- **Interactive Visualization**: Web-based route and traffic overlay on maps
+- **OSM Data Processing**: Python scripts to download and parse OpenStreetMap data
 
 ## Environment Setup
 
@@ -47,11 +47,11 @@ pip install -r requirements.txt
 
 ### Python
 See `requirements.txt` for complete list. Main dependencies:
-- folium (interactive maps)
-- pandas (data processing)
-- geopandas (geospatial data)
-- pyrosm (OSM parsing)
-- PyYAML (configuration)
+- [folium](https://python-visualization.github.io/folium/) (interactive maps)
+- [pandas](https://pandas.pydata.org/) (data processing)
+- [geopandas](https://geopandas.org/) (geospatial data)
+- [pyrosm](https://pyrosm.readthedocs.io/) (OSM parsing)
+- [PyYAML](https://pyyaml.org/) (configuration)
 
 ## Build
 
@@ -64,7 +64,7 @@ make
 ## Usage
 
 ### Data Processing
-You will need to download an OpenStreetMap data file (PBF). Depending on bounding box area, this can get very large. I used [bbox finder](http://bboxfinder.com/#0.000000,0.000000,0.000000,0.000000) tool to download a map of Downtown Pittsburgh and neighbouring areas.  
+You will need to download an OpenStreetMap data file (PBF). Depending on bounding box area, this can get very large. I used [bbox finder](http://bboxfinder.com/#0.000000,0.000000,0.000000,0.000000) tool to find coordinates for Downtown Pittsburgh and neighbouring areas.  
 
 Download OSM data:
 ```bash
@@ -100,8 +100,8 @@ python scripts/visualizer.py --csv results/route_time_*.csv --show-traffic
 
 - **Advanced Algorithms**: Anytime A\*/D\*, D\* Lite, weight reuse from previous iterations
 - **Turn Penalties**: Incorporate realistic turning costs at intersections
-- **Multi-objective Cost Functions**: Optimize for multiple criteria simultaneously (time, distance, fuel, safety)
-- **Lane-aware Planning**: Utilize detailed lane information for more accurate routing
+- **Multi-objective Cost Functions**: Optimize for multiple criteria simultaneously (time, distance, fuel/battery, safety)
+- **Lane-aware Planning**: Utilize lane information for more accurate routing
 - **Emergency Scenarios**: Support for road closures and emergency vehicle response
 
 ## License
